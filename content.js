@@ -1,99 +1,47 @@
 /*
  * LeetSensei - content.js
- * This script runs inside the LeetCode problem pages.
  */
 
-// We wait for 3 seconds for the page to fully load.
+// 1. Inject the button (Visual trigger only)
 setTimeout(() => {
-    injectSenseiButton();
-  }, 3000);
-  
-  let senseiButton; // Make the button a global variable
-  
-  function injectSenseiButton() {
-    const buttonBar = document.querySelector('.flex.justify-between');
+  injectSenseiButton();
+}, 2000);
+
+function injectSenseiButton() {
+  const buttonBar = document.querySelector('.flex.justify-between');
+  if (buttonBar && !document.getElementById('sensei-btn')) {
+    const btn = document.createElement('button');
+    btn.id = 'sensei-btn';
+    btn.innerText = '💡 Open LeetSensei';
+    btn.style.cssText = "padding: 5px 10px; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;";
     
-    if (buttonBar) {
-      senseiButton = document.createElement('button'); // Assign to global
-      senseiButton.innerText = '💡 LeetSensei Hint';
-      
-      senseiButton.style.padding = '5px 10px';
-      senseiButton.style.backgroundColor = '#007bff';
-      senseiButton.style.color = 'white';
-      senseiButton.style.border = 'none';
-      senseiButton.style.borderRadius = '5px';
-      senseiButton.style.cursor = 'pointer';
-      senseiButton.style.marginLeft = '10px';
-  
-      senseiButton.addEventListener('click', onSenseiClick);
-      
-      buttonBar.appendChild(senseiButton);
-      console.log('LeetSensei button injected!');
-  
-    } else {
-      console.log('LeetSensei: Could not find button bar to inject button.');
-    }
+    // Clicking just opens the sidebar (Background handles the open command)
+    btn.addEventListener('click', () => {
+      chrome.runtime.sendMessage({ type: 'openSidePanel' });
+    });
+    
+    buttonBar.appendChild(btn);
   }
-  
-  function onSenseiClick() {
-    console.log('LeetSensei button clicked!');
+}
+
+// 2. LISTEN for requests from the Background Script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === 'getContext') {
     
-    // --- 1. Scrape the Problem Description ---
+    // A. Scrape Problem Text
     const problemElement = document.querySelector('div[data-track-load="description_content"]');
-    
-    let problemText = '';
-    if (problemElement) {
-      problemText = problemElement.innerText;
-      console.log('--- Problem Text Scraped ---');
-    } else {
-      console.log('LeetSensei: Could not find problem description element.');
-      return;
-    }
-  
-    // --- 2. Scrape the Code Editor (DOM Method) ---
+    const problemText = problemElement ? problemElement.innerText : 'No problem description found.';
+
+    // B. Scrape User Code
     let userCode = '';
-    try {
-      const codeLines = document.querySelectorAll('.view-line'); 
-      if (codeLines.length === 0) throw new Error("No code lines found");
-      
-      codeLines.forEach(line => {
-        userCode += line.innerText + '\n'; 
-      });
-      console.log('--- User Code Scraped (from DOM) ---');
-      
-    } catch (error) {
-      console.log('LeetSensei: Error scraping code editor from DOM.', error);
-      return;
-    }
-    
-    // --- 3. Send Scraped Data to the "Brain" (background.js) ---
-    
-    // Show a loading state on the button
-    senseiButton.innerText = '🧠 Thinking...';
-    senseiButton.disabled = true;
-  
-    chrome.runtime.sendMessage(
-      {
-        type: 'getHint',
-        data: {
-          problemText: problemText,
-          userCode: userCode
-        }
-      },
-      (response) => {
-        // This is the callback function that runs *after* the brain replies
-        console.log('Received response from brain:', response);
-        
-        // Restore button
-        senseiButton.innerText = '💡 LeetSensei Hint';
-        senseiButton.disabled = false;
-  
-        // TODO: Display the hint!
-        if (response.success) {
-          alert("Hint from LeetSensei:\n\n" + response.hint);
-        } else {
-          alert("LeetSensei Error:\n\n" + response.error);
-        }
-      }
-    );
+    const codeLines = document.querySelectorAll('.view-line'); 
+    codeLines.forEach(line => userCode += line.innerText + '\n');
+
+    // C. Send back to Background immediately
+    sendResponse({
+      problemText: problemText,
+      userCode: userCode
+    });
   }
+  return true; // Keep channel open
+});
