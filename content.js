@@ -1,11 +1,7 @@
-/*
- * LeetSensei - content.js
- */
-
 // 1. Inject the button (Visual trigger only)
 setTimeout(() => {
   injectSenseiButton();
-}, 2000);
+}, 1000);
 
 function injectSenseiButton() {
   const buttonBar = document.querySelector('.flex.justify-between');

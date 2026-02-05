@@ -8,12 +8,20 @@
   <div id="chat-container">
     <div id="header">
       <h3>🤖 LeetSensei</h3>
+      <button id="clear-btn" title="Clear Chat">🗑️</button>
     </div>
     <div id="messages">
-      <div class="message system">
-        Hello! I'm LeetSensei. Ask me for a hint or to explain a concept.
       </div>
+      <div id="messages">
+      </div>
+    
+    <div id="chips-area" style="padding: 0 15px 10px 15px; display: flex; gap: 8px; overflow-x: auto;">
+      <button class="chip" data-prompt="Give me a small hint based on my code.">💡 Hint</button>
+      <button class="chip" data-prompt="What is the time complexity of my solution?">⏳ Complexity</button>
+      <button class="chip" data-prompt="Are there any edge cases I missed?">🐛 Edge Cases</button>
     </div>
+
+    
     <div id="input-area">
       <textarea id="user-input" placeholder="Type your question..." rows="3"></textarea>
       <button id="send-btn">Send</button>
