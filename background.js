@@ -22,14 +22,14 @@ const model = genAI.getGenerativeModel({
 
 let chatSession = null;
 
-// Ensure Global Side Panel behavior
+
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
   .catch((error) => console.error(error));
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'openSidePanel') {
-    // Open Global Panel
+
     if (sender.tab && sender.tab.windowId) {
       chrome.sidePanel.open({ windowId: sender.tab.windowId });
     }
@@ -43,12 +43,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function handleChat(userPrompt) {
   try {
-    // 1. Get the Current Active Tab
     const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
     
     let contextData = { problemText: "", userCode: "" };
 
-    // 2. Ask content.js for the latest code (Only if we are on LeetCode)
     if (tab && tab.url && tab.url.includes("leetcode.com/problems")) {
       try {
         contextData = await chrome.tabs.sendMessage(tab.id, { type: 'getContext' });
@@ -58,8 +56,6 @@ async function handleChat(userPrompt) {
       }
     }
 
-    // 3. Construct the prompt
-    // We send the code EVERY time so the AI always knows your latest edits.
     const finalPrompt = `
     CURRENT CONTEXT:
     Problem: ${contextData.problemText}
@@ -71,14 +67,12 @@ async function handleChat(userPrompt) {
     ${userPrompt}
     `;
 
-    // 4. Send to Gemini
     if (!chatSession) {
       chatSession = model.startChat();
     }
 
     const result = await chatSession.sendMessage(finalPrompt);
     
-    // 5. Reply to Sidebar
     chrome.runtime.sendMessage({ 
       type: 'senseiReply', 
       text: result.response.text() 
