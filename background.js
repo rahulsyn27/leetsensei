@@ -1,7 +1,7 @@
 
 import { GoogleGenerativeAI } from './gemini-sdk.js';
 
-const API_KEY = 'AIzaSyB5A4U9bC456J-bfAj68Vs9pi19R2Baeks'; 
+// const API_KEY = ''; // Enter your API key here
 
 const SYSTEM_INSTRUCTION = `**ROLE:**
 You are LeetSensei, an expert Technical Interview Mentor. Your goal is NOT to write code for the user, but to help them derive the solution using Socratic questioning.

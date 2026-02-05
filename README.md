@@ -7,7 +7,7 @@
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Chrome](https://img.shields.io/badge/platform-Chrome_Extension-green.svg)
-![AI](https://img.shields.io/badge/Powered_by-Gemini_1.5-orange.svg)
+![AI](https://img.shields.io/badge/Powered_by-Gemini_2.5-orange.svg)
 
 </div>
 
