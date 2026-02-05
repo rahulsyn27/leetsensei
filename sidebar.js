@@ -1,13 +1,9 @@
-/* LeetSensei - sidebar.js (With Clear Logic) */
-
 const sendBtn = document.getElementById('send-btn');
 const userInput = document.getElementById('user-input');
 const messagesDiv = document.getElementById('messages');
-const clearBtn = document.getElementById('clear-btn'); // NEW
+const clearBtn = document.getElementById('clear-btn'); 
 
-// 1. Load History & Check Context on Startup
 document.addEventListener('DOMContentLoaded', async () => {
-  // Get the current tab's URL to see if we changed problems
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const currentUrl = tab ? tab.url : null;
 
@@ -15,18 +11,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const history = result.chatHistory || [];
     const lastUrl = result.lastProblemUrl;
 
-    // AUTO-CLEAR LOGIC: If the URL is different, wipe the chat
     if (currentUrl && lastUrl && currentUrl !== lastUrl) {
       clearChatUI(); 
       addMessage("New problem detected. Chat cleared!", 'system', false);
-      // Update the stored URL
       chrome.storage.local.set({ lastProblemUrl: currentUrl, chatHistory: [] });
     } 
-    // EXISTING LOGIC: Load history if same problem
     else if (history.length > 0) {
       history.forEach(msg => addMessageToUI(msg.text, msg.type));
     } 
-    // DEFAULT: First time ever
     else {
       addMessage("Hello! I'm LeetSensei. Ask me for a hint!", 'system', false);
       if (currentUrl) chrome.storage.local.set({ lastProblemUrl: currentUrl });
@@ -34,10 +26,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
-// 2. Event Listeners
 sendBtn.addEventListener('click', sendMessage);
 
-// NEW: Manual Clear Listener
 clearBtn.addEventListener('click', () => {
   chrome.storage.local.set({ chatHistory: [] }, () => {
     clearChatUI();
@@ -52,7 +42,6 @@ userInput.addEventListener('keydown', (e) => {
   }
 });
 
-// 3. Send Message Logic
 function sendMessage() {
   const prompt = userInput.value.trim();
   if (prompt === "") return;
@@ -65,7 +54,6 @@ function sendMessage() {
   chrome.runtime.sendMessage({ type: 'askSensei', prompt: prompt });
 }
 
-// 4. Listen for Replies
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'senseiReply') {
     removeLoading();
@@ -76,7 +64,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// 5. Helper Functions
+
 
 function addMessage(text, type, save = true) {
   addMessageToUI(text, type);
@@ -87,8 +75,6 @@ function addMessageToUI(text, type) {
   const msgDiv = document.createElement('div');
   msgDiv.className = `message ${type}`;
   
-  // Format simple markdown (optional, keeps code blocks clean)
-  // For now, we stick to text to avoid breaking things
   msgDiv.innerText = text; 
   
   messagesDiv.appendChild(msgDiv);
@@ -118,29 +104,22 @@ function addMessageToUI(text, type) {
   const msgDiv = document.createElement('div');
   msgDiv.className = `message ${type}`;
 
-  // If it's a system/sensei message, parse the Markdown
   if (type === 'sensei' || type === 'system') {
     msgDiv.innerHTML = parseMarkdown(text);
   } else {
-    msgDiv.innerText = text; // User messages stay plain text
+    msgDiv.innerText = text; 
   }
   
   messagesDiv.appendChild(msgDiv);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
-// --- ADD THIS BLOCK NEAR YOUR OTHER EVENT LISTENERS ---
-
-// Global listener for ALL "Copy" buttons (Event Delegation)
 messagesDiv.addEventListener('click', (e) => {
   if (e.target.classList.contains('copy-btn')) {
     const btn = e.target;
-    // Find the <code> element inside the sibling <pre>
     const code = btn.nextElementSibling.querySelector('code').innerText;
     
-    // Copy to clipboard
     navigator.clipboard.writeText(code).then(() => {
-      // Visual feedback
       const originalText = btn.innerText;
       btn.innerText = '✅ Copied!';
       setTimeout(() => {
@@ -154,11 +133,7 @@ messagesDiv.addEventListener('click', (e) => {
 });
 
 
-// --- REPLACE YOUR EXISTING parseMarkdown FUNCTION ---
-
 function parseMarkdown(text) {
-  // 1. Handle Code Blocks (``` ... ```)
-  // We wrap them in a .code-wrapper div with a <button>
   let formatted = text.replace(/```([\s\S]*?)```/g, (match, code) => {
     const cleanCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return `
@@ -168,26 +143,21 @@ function parseMarkdown(text) {
       </div>`;
   });
 
-  // 2. Handle Inline Code (` ... `)
   formatted = formatted.replace(/`([^`]+)`/g, '<span class="inline-code">$1</span>');
 
-  // 3. Handle Bold (** ... **)
   formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-  // 4. Convert newlines to <br> (but NOT inside the .code-wrapper)
   return formatted.split(/(<div class="code-wrapper"[\s\S]*?<\/div>)/g).map(chunk => {
     if (chunk.startsWith('<div class="code-wrapper"')) return chunk;
     return chunk.replace(/\n/g, '<br>');
   }).join('');
 }
 
-// Add this near your other event listeners
 document.querySelectorAll('.chip').forEach(chip => {
   chip.addEventListener('click', () => {
     const prompt = chip.getAttribute('data-prompt');
     
-    // Auto-fill input and send
     userInput.value = prompt;
-    sendMessage(); // Reuse your existing send function
+    sendMessage(); 
   });
 });
